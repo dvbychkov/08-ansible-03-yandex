@@ -1,0 +1,93 @@
+---
+- name: Install and configure Lighthouse
+  hosts: lighthouse
+  become: true
+  vars:
+    lighthouse_dir: "/var/www/lighthouse"
+    nginx_conf: "/etc/nginx/sites-available/lighthouse.conf"
+    lighthouse_temp: "/tmp/lh_unpack"
+    lighthouse_zip: "/tmp/lighthouse.zip"
+  tasks:
+    - name: Install prerequisites
+      apt:
+        name:
+          - nginx
+          - unzip
+        state: present
+        update_cache: true
+
+    - name: Create web directory
+      file:
+        path: "{{ lighthouse_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Check if Lighthouse zip exists
+      stat:
+        path: "{{ lighthouse_zip }}"
+      register: lighthouse_zip_stat
+
+    - name: Download Lighthouse if not present
+      get_url:
+        url: https://github.com/VKCOM/lighthouse/archive/refs/heads/master.zip
+        dest: "{{ lighthouse_zip }}"
+        mode: '0644'
+      when: not lighthouse_zip_stat.stat.exists
+      register: download_result
+      until: download_result is succeeded
+      retries: 3
+      delay: 10
+
+    - name: Create temporary directory for unpacking
+      file:
+        path: "{{ lighthouse_temp }}"
+        state: directory
+
+    - name: Unzip Lighthouse into temp directory
+      unarchive:
+        src: "{{ lighthouse_zip }}"
+        dest: "{{ lighthouse_temp }}"
+        remote_src: true
+      when: lighthouse_zip_stat.stat.exists
+
+    - name: Copy Lighthouse files to target directory
+      command:
+        cmd: mv {{ lighthouse_temp }}/lighthouse-master/* {{ lighthouse_dir }}
+      when: lighthouse_zip_stat.stat.exists
+
+    - name: Clean up temporary directory
+      file:
+        path: "{{ lighthouse_temp }}"
+        state: absent
+
+    - name: Clean up zip file
+      file:
+        path: "{{ lighthouse_zip }}"
+        state: absent
+
+    - name: Configure Nginx
+      template:
+        src: templates/lighthouse.conf.j2
+        dest: "{{ nginx_conf }}"
+        mode: '0644'
+      notify: restart nginx
+
+    - name: Enable site configuration
+      file:
+        src: "{{ nginx_conf }}"
+        dest: "/etc/nginx/sites-enabled/default"
+        state: link
+        force: true
+      notify: restart nginx
+
+    - name: Ensure Nginx is running
+      service:
+        name: nginx
+        state: started
+        enabled: true
+
+  handlers:
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted

@@ -1,0 +1,25 @@
+---
+all:
+  hosts:
+    clickhouse:
+      ansible_host: 89.169.143.69
+      ansible_user: ubuntu
+      internal_ip: 10.0.1.30
+    vector:
+      ansible_host: 89.169.133.49
+      ansible_user: ubuntu
+      internal_ip: 10.0.1.35
+    lighthouse:
+      ansible_host: 130.193.50.247
+      ansible_user: ubuntu
+      internal_ip: 10.0.1.33
+  children:
+    clickhouse:
+      hosts:
+        clickhouse:
+    vector:
+      hosts:
+        vector:
+    lighthouse:
+      hosts:
+        lighthouse:
