@@ -41,20 +41,11 @@
 10. Готовый playbook выложите в свой репозиторий, поставьте тег 08-ansible-03-yandex на фиксирующий коммит, в ответ предоставьте ссылку на него.
 
 
+prod.yml
+https://github.com/dvbychkov/08-ansible-03-yandex/blob/master/prod.yml
 
+site.yml
+https://github.com/dvbychkov/08-ansible-03-yandex/blob/master/site.yml
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<img src = "img/1.JPG" width = 50%>
+templates
+https://github.com/dvbychkov/08-ansible-03-yandex/tree/master/templates
